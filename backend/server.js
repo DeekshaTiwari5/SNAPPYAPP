@@ -16,10 +16,10 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-app.get("/", (req, res) =>
-{
-  res.send("API is running Successfully");
-});
+// app.get("/", (req, res) =>
+// {
+//   res.send("API is running Successfully");
+// });
 
 app.use('/api/user', userRoutes);
 app.use('/api/chat', chatRoutes);
@@ -28,18 +28,33 @@ app.use('/api/message', messageRoutes);
 // --------------------------deployment------------------------------
 
 const __dirname1 = path.resolve();
-
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname1, "/frontend/build")));
-
-  app.get("*", (req, res) =>{
-    res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"));
-});
+  app.use(express.static(path.join(__dirname1, "frontend", "build")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname1, "frontend", "build", "index.html"));
+  });
 } else {
-  app.get("/", (req, res) => {
-    res.send("API is running..");
+  const publicPath = path.join(__dirname1, "frontend", "public");
+  app.use(express.static(publicPath));
+
+  // Serve your main HTML file for both root and other routes
+  app.get("/*", (req, res) => {
+    res.sendFile(path.join(publicPath, "index.html"));
   });
 }
+
+// if (process.env.NODE_ENV === "production") {
+//   app.use(express.static(path.join(__dirname1, "/frontend/build")));
+
+//   app.get("*", (req, res) =>{
+//     res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"));
+// });
+// } else {
+//   app.get("/", (req, res) => {
+//     res.send("API is running..");
+//   });
+// }
+
 
 // --------------------------deployment------------------------------
 
@@ -63,6 +78,7 @@ const PORT = process.env.PORT||5000;
 const server= app.listen(PORT, () => {
   console.log(`Server running on PORT ${PORT}`.yellow.bold);
 });
+
  /////  socket.io set up  /////
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
